@@ -116,8 +116,7 @@ AC_DEFUN([AC_COIN_ENABLE_MSVC],
 
 AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 [
-# We want --enable-msvc setup and checked.
-
+  # We want --enable-msvc setup and checked
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([debug],
@@ -136,8 +135,7 @@ AC_DEFUN([AC_COIN_COMPFLAGS_DEFAULTS],
 
 # change default compiler flags
 # - debugging enabled: enable debug symbols (-g/-Z7)
-# - debugging disabled: disable debug code (-DNDEBUG); enable (more)
-#   optimization (-O2)
+# - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
 # - enable exceptions for (i)cl
 
   if test "$enable_debug" = yes ; then

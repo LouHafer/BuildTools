@@ -1,24 +1,25 @@
-# Copyright (C) 2006, 2007 International Business Machines and others.
-# All Rights Reserved.
-# This file is distributed under the Eclipse Public License.
-
-## $Id$
-
-# Author:  Andreas Waechter           IBM    2006-04-13
+## Copyright (C) 2006, 2007 International Business Machines and others.
+## All Rights Reserved.
+## This file is distributed under the Eclipse Public License.
+##
+## Author:  Andreas Waechter           IBM    2006-04-13
 
 
-########################################################################
-#        Variables for documentation and data directories              #
-########################################################################
+## #####################################################################
+##        Variables for documentation and data directories             #
+## #####################################################################
 
-# Set these up to provide some uniformity in naming while also conforming
-# to Gnu directory standards. For reasons known only to the autoconf
-# developers, autoconf leaves datadir = $(datarootdir) but forces docdir
-# to $(datarootdir)/doc/$(PACKAGE_TARNAME).
+## Set these up to provide some uniformity in naming while also conforming
+## to GNU directory standards. For reasons known only to the autoconf
+## developers, autoconf leaves datadir = $(datarootdir) but forces docdir
+## to $(datarootdir)/doc/$(PACKAGE_TARNAME).
 
 pkgincludedir = $(includedir)/coin-or
 pkgdatadir = $(datadir)/$(PACKAGE_TARNAME)
 pkgdocdir = $(docdir)
+
+## The directory where to install .pc files is also always the same.
+pkgconfiglibdir = $(libdir)/pkgconfig
 
 # doxydocdir is the top-level directory for doxygen documentation. It holds
 # the tag file and possibly the PDF or Postscript version. doxyhtmldir is
@@ -28,17 +29,17 @@ pkgdocdir = $(docdir)
 doxydocdir = $(pkgdocdir)/doxydoc
 doxyhtmldir = $(doxydocdir)/html
 
-########################################################################
-#                    Documentation installation                        #
-########################################################################
+## #####################################################################
+##                    Documentation installation                       #
+## #####################################################################
 
-DocFiles =  README AUTHORS LICENSE
+DocFiles =  README README.md AUTHORS AUTHORS.md LICENSE LICENSE.md
 
 COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
 COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
 
-# Needless to say, it's important that baredocdir_nosub not be a target for
-# autoconf substitution.
+## Needless to say, it's important that baredocdir_nosub not be a target for
+## autoconf substitution.
 
 DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'
 
@@ -117,37 +118,6 @@ uninstall-doc:
 	  rm -f "$(DESTDIR)$(pkgdocdir)/$$file"; \
 	done
 	rmdir $(DESTDIR)$(pkgdocdir) || true
-
-########################################################################
-#                         Maintainer Stuff                             #
-########################################################################
-
-if MAINTAINER_MODE
-
-# Make sure acinclude is using most recent coin.m4
-$(srcdir)/acinclude.m4: $(BUILDTOOLSDIR)/coin.m4
-	cat $(LIBTOOLM4) $< > $@
-
-# Make sure the autotools scripts are up to date
-$(AUX_DIR)/install-sh: $(BUILDTOOLSDIR)/install-sh
-	cp $< $@
-
-$(AUX_DIR)/missing: $(BUILDTOOLSDIR)/missing
-	cp $< $@
-
-$(AUX_DIR)/config.guess: $(BUILDTOOLSDIR)/config.guess
-	cp $< $@
-
-$(AUX_DIR)/config.sub: $(BUILDTOOLSDIR)/config.sub
-	cp $< $@
-
-$(AUX_DIR)/depcomp: $(BUILDTOOLSDIR)/depcomp
-	cp $< $@
-
-$(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
-	cp $< $@
-
-endif
 
 .PHONY: install-doc uninstall-doc \
 	doxygen-docs pdf-doxygen-docs clean-doxygen-docs \

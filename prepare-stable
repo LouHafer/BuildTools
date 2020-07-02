@@ -1,0 +1,169 @@
+#!/bin/bash
+
+#set -x -v
+set -e
+
+if expr "$0" : '.*/.*' >/dev/null 2>&1 ; then
+  cmdDir=`dirname $0`
+else
+  cmdDir='.'
+fi
+
+# process parameters
+bumpMajor=0
+while [ $# -ge 1 ] ; do
+  case "$1" in
+    -h | --help | --usage )
+      cat <<EOF
+Usage: $0 { -h | --help | --usage }
+
+Options:
+  -h, --help, --usage   Print this help and exit
+  -m                    Bump the major version number.
+
+This script is supposed to be run from a directory that contains the
+clone of a COIN-OR project and will create a new stable branch from the
+head of the currently checked out branch.
+
+This script will do the following:
+
+  - Set the new stable version number as the next minor version number in
+    the current major version number. Use the -m flag to bump the major
+    version number.
+
+  - Run run_autotools to rebuild configure and make files.
+
+If there is any error during these tasks the script will stop and you should
+examine the output.
+If the script completes without error, examine the output, too.
+
+This script does not make any changes to the remote repository, but prints
+out the commands that should be issued to push the new stable branch or
+to remove the new stable branch in the local clone.
+EOF
+      exit 0
+    ;;
+    -m* | --m*) bumpMajor=1 ;;
+    *)
+      echo "Unknown argument. Run with -h to see usage."
+      exit 1
+    ;;
+  esac
+  shift
+done
+
+if ! git diff --exit-code --quiet HEAD ; then
+  echo "EXIT: There are uncommitted changes. I'm too afraid to proceed."
+  exit 1
+fi
+
+# figure out name of project from repo URL, remove possible .git suffix
+topProjName=`git remote get-url origin`
+topProjName=${topProjName##*/}
+topProjName=${topProjName/.git/}
+echo "Project        : $topProjName"
+
+
+# get branches from remote
+git fetch
+
+# get last stable branch
+lastStable=`git branch --list -r "origin/stable/*" | sort -V | tail -1`
+echo "Last Stable    : $lastStable"
+
+# figure out new stable number
+if [ -z "$lastStable" ] ; then
+  # no last stable, then choose 0.1
+  majVer=0
+  minVer=1
+elif [[ "$lastStable" =~ stable/([0-9][0-9]*)\.([0-9][0-9]*)$ ]] ; then
+  majVer=${BASH_REMATCH[1]}
+  minVer=${BASH_REMATCH[2]}
+  if test "$bumpMajor" = 1 ; then
+    (( majVer += 1 ))
+    minVer=0
+  else
+    (( minVer += 1 ))
+  fi
+else
+  echo "ERROR: Last stable name does not match stable/xx.yy format"
+  exit 1
+fi
+newVer=${majVer}.${minVer}
+
+echo "New Stable     : stable/$newVer"
+
+# Find configure.ac files and update the version.
+
+echo ''
+echo "===> Checking for configure.ac files ..."
+confac_files=`find . -name 'configure.ac' -print`
+
+if test -n "$confac_files" ; then
+
+# Take the attitude that [] around parameters in AC_INIT is optional,
+# it's the commas that count. This does make for a surpassing ugly regular
+# expression.  A comma in the version string will cause a spectacular failure.
+# In AC_COIN_PROJECTDIR_INIT, take the attitude that we only add a
+# libtool version number as argument.
+
+  echo ''
+  echo "===> Updating version number in configure.ac files ..."
+  for i in $confac_files; do
+    sed -i -e "s|AC_INIT\([^,]*\),[^,]*,\(.*\)|AC_INIT\1,[$newVer],\2|" $i
+    git diff $i
+  done
+else
+  echo "    ... none to process."
+fi
+
+# Find config_proj_default.h. If there's a definition for PROJ_VERSION, adjust it and
+# add config_proj_default.h.bak to the list of files to be restored.
+
+configFileLoc=`find . -name 'config_*_default.h' -print`
+if test -n "$configFileLoc" ; then
+  versionSym=${topProjName^^}_VERSION
+  echo ''
+  echo "===> Updating $versionSym in $configFileLoc (if present)"
+  echo ''
+  sed -i -e "s/# *define $versionSym .*\$/#define $versionSym \"$newVer\"/" \
+    -e "s/# *define ${versionSym}_MAJOR .*\$/#define ${versionSym}_MAJOR $majVer/" \
+    -e "s/# *define ${versionSym}_MINOR .*\$/#define ${versionSym}_MINOR $minVer/" \
+    -e "s/# *define ${versionSym}_RELEASE .*\$/#define ${versionSym}_RELEASE 9999/" \
+    $configFileLoc
+  git diff $configFileLoc
+fi
+
+if [ $topProjName != BuildTools ] ; then
+  echo ''
+  echo '===> Running $cmdDir/run_autotools ...'
+  echo ''
+
+  [ -e BuildTools ] && mv BuildTools BuildTools.bak
+
+  $cmdDir/run_autotools
+
+  [ -e BuildTools.bak ] && mv BuildTools.bak BuildTools
+fi
+
+echo ''
+echo '===> Committing changes to new branch new branch stable/$newVer in local git clone ...'
+echo ''
+
+echo "Create branch stable/$newVer"
+git checkout -b stable/$newVer
+
+echo "Committing verion number update"
+git commit -a -m "version number update for branch stable/$newVer"
+
+echo ''
+echo '===> Done ...'
+echo ''
+echo 'After reviewing the output above, you can push the new branch via'
+echo ''
+echo "   git push -u origin stable/$newVer"
+echo ''
+echo 'Alternatively, you can forget the locally committed branch via'
+echo ''
+echo "   git checkout master"
+echo "   git branch -D stable/$newVer"

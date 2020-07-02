@@ -17,7 +17,7 @@
 #      forcing installation of autotools auxilliary scripts. Also add some
 #      command line options and restore ability to specify individual
 #      directories on the command line.
-# Modified: Lou Hafer	       retired	2017-05-17
+# Modified: Lou Hafer          retired  2017-05-17
 #      Allow that we can use bash. Make sure help always works.
 
 # run_autotools takes care of running the autotools (automake, autoconf,
@@ -35,14 +35,14 @@
 
 # Each directory processed gets a temporary link to BuildTools, unless a
 # BuildTools subdirectory is already present. Mostly this is a convenience, but
-# one thing makes it mandatory: Many Makefile.am files in COIN use an include
+# one thing makes it mandatory: Many Makefile.am files in COIN-OR use an include
 # directive to pull in BuildTools/Makemain.inc. There's no way I (lh) can see
 # to alter the path that's hardcoded in the include directive. Just to make it
-# more interesting, COIN projects are generally constructed with the assumption
+# more interesting, COIN-OR projects are generally constructed with the assumption
 # that BuildTools will be one or two directories up, so you'll see things like
 # `include ../BuildTools/Makemain.inc'. run_autotools doesn't understand this
 # hierarchy, so it keeps all those temporary BuildTools links until the very
-# end. That way, it works with the old-style COIN organisation where a
+# end. That way, it works with the old-style COIN-OR organisation where a
 # BuildTools directory is pulled in as an external in the top directory of a
 # package, and with the new-style independent organisation, where there may be
 # only a single copy of BuildTools out there somewhere.
@@ -54,51 +54,25 @@
 # scripts with the -ni option. It's good to read the autoconf documentation for
 # AC_CONFIG_AUX_DIR if this doesn't make sense to you.
 
-# The required autotools versions, along with a few other differences. Current
-# (trunk) versions first, older (stable) versions next.
+# Find out the location for autotools executables, macros, etc.
+# This can be overidden if the user sets COIN_AUTOTOOLS_DIR in the environment.
+# If COIN_AUTOTOOLS_DIR is set, make sure that is at the beginning of PATH.
 
-case "${COIN_ENV:-git}" in
-  "mixed" )
-    repoDir='.git .svn'
-    ver_autoconf='2.69'
-    ver_automake='1.16.1'
-    ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    ;;
-  "git" )
-    repoDir='.git'
-    ver_autoconf='2.69'
-    ver_automake='1.16.1'
-    ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    ;;
-  "trunk" )
-    repoDir='.svn'
-    ver_autoconf='2.69'
-    ver_automake='1.16.1'
-    ver_libtool='2.4.6'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing compile"
-    ;;
-  "stable" )
-    repoDir='.svn'
-    ver_autoconf='2.59'
-    ver_automake='1.9.6'
-    ver_libtool='1.5.22'
-    ltfile=$AUTOTOOLS_DIR/share/libtool/ltmain.sh
-    autotoolsFiles="config.guess config.sub depcomp install-sh"
-    autotoolsFiles="$autotoolsFiles ltmain.sh missing"
-    ;;
-  * )
-    echo "Unknown COIN environment '$COIN_ENV'. Aborting."
-    exit
-    ;;
-esac
+if test -z "$COIN_AUTOTOOLS_DIR" ; then
+  # assume that autotools directory is given by location of autoconf
+  COIN_AUTOTOOLS_DIR=`dirname $(which autoconf)`/..
+else
+  # prefix PATH with COIN_AUTOTOOLS_DIR/bin
+  PATH="${COIN_AUTOTOOLS_DIR}/bin:$PATH"
+fi
+echo "Using COIN_AUTOTOOLS_DIR=$COIN_AUTOTOOLS_DIR"
+
+repoDir='.git'
+ver_autoconf='2.69'
+ver_automake='1.16.2'
+ver_libtool='2.4.6'
+ltfile=$COIN_AUTOTOOLS_DIR/share/libtool/build-aux/ltmain.sh
+autotoolsFiles="config.guess config.sub depcomp install-sh ltmain.sh missing compile ar-lib"
 
 # Define a cleanup function. We'll set a trap below, just before we start to
 # do actual work.
@@ -120,10 +94,9 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   -h  | --help           print help message and exit
   -r  | --recursion      do recursive search for configure.ac files
   -nr | --no-recursion   do not do recursive search for configure.ac files
-  -ni | --dependent      do not install scripts necessary for an independent
-  			 unit
+  -ni | --dependent      do not install scripts necessary for an independent unit
   -f  | --foreign        process foreign configuration files (configure.ac
-                         does not contain COIN configuration macros).
+                         does not contain COIN-OR configuration macros).
   -d  | --dryrun         exit immediately after determining the list of
                          directories to be processed
 
@@ -131,7 +104,7 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
 
   If no directories and -r are specified, the tree rooted at the current
   directory is searched recursively for directories with configure.ac
-  files containing COIN configuration macros (AC_COIN_*) and autotools
+  files containing COIN-OR configuration macros (AC_COIN_*) and autotools
   is run in those directories. Directories listed in COIN_SKIP_PROJECTS
   are skipped.  If directories are specified on the command line, the
   search for configure.ac files is restricted to the specified directories.
@@ -146,16 +119,16 @@ usage: run_autotools [-h] [-[n]r] [-ni] [-f] [ directory directory ... ]
   The most common scenario for run_autotools is to process a project with a
   configure.ac file in the top-level directory of the project and no nested
   configure.ac files. Hence the default of no recursion and install autotools
-  scripts.  The -r option is useful if you have multiple COIN projects in
+  scripts.  The -r option is useful if you have multiple COIN-OR projects in
   sibling directories and want to do a batch run of autotools on all of them.
 
   The -f (--foreign) option causes run_autotools to process any configure.ac,
-  even if it contains no COIN macros. Occasionally useful for adapting
-  ThirdParty native configuration for COIN. Be sure you know what you're
+  even if it contains no COIN-OR macros. Occasionally useful for adapting
+  ThirdParty native configuration for COIN-OR. Be sure you know what you're
   doing.
 
-  The environment variable AUTOTOOLS_DIR can be used to point to an alternate
-  installation of the autotools (current location $AUTOTOOLS_DIR)
+  The environment variable COIN_AUTOTOOLS_DIR can be used to point to an alternate
+  installation of the autotools (current location $COIN_AUTOTOOLS_DIR)
 
   Default autotools versions:
     autoconf: $ver_autoconf
@@ -187,7 +160,7 @@ checkAutotoolVersion () {
 
   local toolDir=`command -v $toolName | sed -e "s,/$toolName,,"`
   toolDir=`cd $toolDir ; pwd`
-  local autoDir=`cd $AUTOTOOLS_DIR/bin ; pwd`
+  local autoDir=`cd $COIN_AUTOTOOLS_DIR/bin ; pwd`
   if [[ "$toolDir" != "$autoDir" ]] ; then
     echo "$toolName is not picked up from the correct location."
     return 3
@@ -226,18 +199,6 @@ findProjects () {
   done
   echo $dirs
 }
-
-
-# Set up a default location for autotools executables, macros, etc. This
-# can be overidden if the user sets AUTOTOOLS_DIR in the environment. If this
-# directory is not already in the PATH, add it.
-
-if [[ -z "$AUTOTOOLS_DIR" ]] ; then
-  AUTOTOOLS_DIR=/usr
-fi
-if ! expr ":${PATH}:" : '.*:'"${AUTOTOOLS_DIR}"'/bin:.*' &>/dev/null ; then
-  export PATH=$AUTOTOOLS_DIR/bin:$PATH
-fi
 
 # See if the user just wants help, before we get into the thick if it.
 
@@ -283,8 +244,7 @@ while expr "$runautotoolDir" : '.*/\.\.' >/dev/null 2>&1 ; do
   runautotoolDir=`echo $runautotoolDir | \
                   sed -e 's,/[^/][^/]*/\.\./,/,' -e 's,/[^/][^/]*/\.\.$,,'`
 done
-runautotoolDir=`echo $runautotoolDir | \
-		sed -e 's,/\./,/,g' -e 's,//,/,g' -e 's,/.$,,'`
+runautotoolDir=`echo $runautotoolDir | sed -e 's,/\./,/,g' -e 's,//,/,g' -e 's,/.$,,'`
 
 if [[ ! -f ${runautotoolDir}/coin.m4 ]] ; then
   echo "Found $myName in $runautotoolDir but coin.m4 is not present."
@@ -297,7 +257,7 @@ fi
 if ! checkAutotoolVersion autoconf $ver_autoconf ; then
   exit 2
 fi
-if !  checkAutotoolVersion automake $ver_automake ; then
+if ! checkAutotoolVersion automake $ver_automake ; then
   exit 2
 fi
 
@@ -308,7 +268,7 @@ if [[ ! -r $ltfile ]] ; then
   echo "WARNING: Cannot find libtool shell $ltfile"
 fi
 if ! grep -F $ver_libtool $ltfile &>/dev/null ; then 
-  echo WARNING: You are not using the correct version of libtool
+  echo "WARNING: You are not using the correct version of libtool"
 fi
 
 # Set up to process parameters. No parameters is the default.
@@ -394,7 +354,7 @@ if [[ ${#noSkipDirs[@]} -gt 0 && ${#dirsToProcess[@]} -gt 0 ]] ; then
     for dir in ${canonicalNoSkipDirs[@]} ; do
       if [[ $canonicalDir != $dir ]] ; then
         tmpDir+=(${dirsToProcess[$ndx]})
-	break
+        break
       fi
     done
   done
@@ -417,8 +377,8 @@ if [[ -n "$COIN_SKIP_PROJECTS" && ${#dirsToProcess[@]} -gt 0 ]] ; then
       # echo "comparing [$ndx] ${dirsToProcess[$ndx]} with $dir"
       if expr "${dirsToProcess[$ndx]}" : '.*/'"$dir"'$' &>/dev/null ; then
         # echo "  dropping ${dirsToProcess[$ndx]}"
-	drop=1
-	break
+        drop=1
+        break
       fi
     done
     if [[ $drop -eq 0 ]] ; then
@@ -542,10 +502,10 @@ for dir in ${dirs[@]} ; do
         for file in $autotoolsFiles ; do
           if test -e BuildTools/$file ; then
             cp BuildTools/$file .
-          elif test -e $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file ; then
-            cp $AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file .
-          elif test -e $AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
-            cp $AUTOTOOLS_DIR/share/libtool/build-aux/$file .
+          elif test -e $COIN_AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file ; then
+            cp $COIN_AUTOTOOLS_DIR/share/automake-${ver_automake:0:4}/$file .
+          elif test -e $COIN_AUTOTOOLS_DIR/share/libtool/build-aux/$file ; then
+            cp $COIN_AUTOTOOLS_DIR/share/libtool/build-aux/$file .
           else
             echo "  Do not know where to take $file from."
             exit 1
@@ -560,7 +520,7 @@ for dir in ${dirs[@]} ; do
 
 # Get on with running the autotools.
 
-    m4Dirs="-I $AUTOTOOLS_DIR/share/aclocal"
+    m4Dirs="-I $COIN_AUTOTOOLS_DIR/share/aclocal"
     m4Dirs="$m4Dirs -I $toolsDir"
     if test -d m4 ; then
       m4Dirs="$m4Dirs -I m4"
@@ -588,7 +548,7 @@ for dir in ${dirs[@]} ; do
 
     for f in BuildTools/headers/* ; do
       h=`basename $f`
-      echo "Update $f, if existing"
+      echo "  update $f, if existing"
       find . -name BuildTools -prune -o -name $h -exec cp $f {} \;
     done
 

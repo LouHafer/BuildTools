@@ -1,6 +1,7 @@
-# Copyright (C) 2013-2020 COIN-OR
+# Copyright (C) 2020 COIN-OR Foundation
 # All Rights Reserved.
-# This file is distributed under the Eclipse Public License.
+# This file is distributed under the Eclipse Public License 2.0.
+# See LICENSE for details.
 #
 # This file defines the common autoconf macros for COIN-OR
 
@@ -724,7 +725,7 @@ dnl setup LIBS by adding $2 and those from $3
   m4_ifnblank([$3],
     [if test -n "$3" ; then
       AC_REQUIRE([AC_COIN_HAS_PKGCONFIG])
-      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $3`
+      temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static $3`
       LIBS="$temp_LFLAGS $LIBS"
     fi])
 
@@ -820,6 +821,12 @@ dnl This is a modified version of _PKG_SHORT_ERRORS_SUPPORTED from pkg.m4.
     pkg_short_errors=" --short-errors "
   else
     pkg_short_errors=""
+  fi
+
+  # Check whether -static option of pkg-config should be used when requesting libs
+  pkg_static=
+  if test -n "$PKG_CONFIG" ; then
+    case "$LDFLAGS" in "-static" | "* -static*" ) pkg_static=--static ;; esac
   fi
 
 dnl Create a automake conditional and PKG_CONFIG variable
@@ -1489,7 +1496,9 @@ dnl If the client specified dataonly, its value is assigned to prim_data.
             else
               m4_tolower($1_data)="/usr/local/share"
             fi])])
-      m4_tolower(coin_has_$1)=yes
+dnl go to linkcheck if we have a symbol to look for ($5)
+dnl otherwise skip project, since we cannot check whether made-up l/cflags work
+      m4_ifnblank([$5],m4_tolower(coin_has_$1)=yes,m4_tolower(coin_has_$1)=skipping)
       ;;
     skipping | yes )
       ;;
@@ -1918,6 +1927,7 @@ dnl can arrange that explicitly.
 dnl TODO we may want to add an option to check for parallel MKL or switch to it by default?
         old_IFS="$IFS"
         IFS=";"
+        coin_mkl=""
         for d in $LIB ; do
           # turn $d into unix-style short path (no spaces); cannot do -us, so first do -ws, then -u
           d=`cygpath -ws "$d"`
@@ -1935,9 +1945,11 @@ dnl TODO we may want to add an option to check for parallel MKL or switch to it 
           fi
         done
         IFS="$old_IFS"
-        AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
-            [coin_has_lapack=yes
-             lapack_lflags="$coin_mkl"])
+        if test -n "$coin_mkl" ; then
+           AC_COIN_TRY_LINK([dsyev],[$coin_mkl],[],
+               [coin_has_lapack=yes
+                lapack_lflags="$coin_mkl"])
+        fi
       ;;
 
       *-darwin*)
@@ -2141,7 +2153,7 @@ AC_DEFUN([AC_COIN_FINALIZE_FLAGS],
       AC_SUBST(m4_toupper(myvar)_CFLAGS_NOPC,[$m4_toupper(myvar)_CFLAGS])
       if test -n "${m4_toupper(myvar)_PCFILES}" ; then
         temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${m4_toupper(myvar)_PCFILES}`
-        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${m4_toupper(myvar)_PCFILES}`
+        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs $pkg_static ${m4_toupper(myvar)_PCFILES}`
         m4_toupper(myvar)_CFLAGS="$temp_CFLAGS ${m4_toupper(myvar)_CFLAGS}"
         m4_toupper(myvar)_LFLAGS="$temp_LFLAGS ${m4_toupper(myvar)_LFLAGS}"
       fi

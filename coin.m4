@@ -126,8 +126,7 @@ dnl We want --enable-msvc setup and checked
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([debug],
-    [AC_HELP_STRING([--enable-debug],
-       [build debugging symbols and turn off compiler optimization])],
+    [AC_HELP_STRING([--enable-debug],[build debugging symbols and turn off compiler optimization])],
     [enable_debug=$enableval],
     [enable_debug=no])
 

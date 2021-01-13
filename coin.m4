@@ -1905,10 +1905,9 @@ dnl Linux/Darwin.
   if test "$coin_has_lapack" = no ; then
     case $build in
       *-linux*)
-        AC_COIN_TRY_LINK([dsyev],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
+         AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
+           coin_has_lapack=yes
+           lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
       ;;
 
 dnl Do SGI systems even exist any more? Do we need this? -- lh, 201114 --
@@ -1942,7 +1941,7 @@ dnl it by default?
         coin_mkl=""
         for d in $LIB ; do
           # turn $d into unix-style short path (no spaces); cannot do -us,
-	  # so first do -ws, then -u
+          # so first do -ws, then -u
           d=`cygpath -ws "$d"`
           d=`cygpath -u "$d"`
           if test "$enable_shared" = yes ; then
@@ -1966,10 +1965,9 @@ dnl it by default?
       ;;
 
       *-darwin*)
-        AC_COIN_TRY_LINK([dsyev],
-	  [-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm],[],
-	  [coin_has_lapack=yes
-           lapack_lflags="-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lm"])
+        AC_COIN_TRY_LINK([dsyev],[-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm],[],[
+          coin_has_lapack=yes
+          lapack_lflags="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm"])
         if test "$coin_has_lapack" = no ; then
           AC_COIN_TRY_LINK([dsyev],
 	    [-framework Accelerate],[],

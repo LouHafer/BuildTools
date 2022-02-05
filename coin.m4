@@ -819,8 +819,8 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 # COIN_CHK_HERE([prim],[client packages],[pcfile])
 
 # Augment the _LFLAGS, _CFLAGS, and _PCFILES variables of the client
-# packages with the values from PRIM_LFLAGS_PUB, PRIM_CFLAGS_PUB, and
-# PRIM_PCFILES_PUB. This macro is intended for the case where a single project
+# packages with the values from PRIM_LFLAGS, PRIM_CFLAGS, and the .pc file
+# for PRIM. This macro is intended for the case where a single project
 # builds several objects and one object includes another. For example,
 # the various OsiXxxLib solvers, which depend on OsiLib. We can't consult
 # osi.pc (it's not installed yet) but the relevant variables are ready at
@@ -844,10 +844,12 @@ dnl Make sure the necessary variables exist for each client package.
      AC_SUBST(m4_toupper(myvar)_PCFILES)
     ])
 
-dnl Add the .pc file and augment LFLAGS and CFLAGS.
-dnl From the CFLAGS of $1, remove the -D$1_BUILD, though.
+dnl Add the .pc file and augment LFLAGS and CFLAGS. Note that there will
+dnl always be a .pc file as the name defaults to to_lower($1). But make sure
+dnl we remove -D$1_BUILD from the CFLAGS of $1!
+
     m4_foreach_w([myvar],[$2],
-      [if test -n "$m4_toupper(myvar)_PCFILES" ; then m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))" ; fi
+      [ m4_toupper(myvar)_PCFILES="$m4_toupper(myvar)_PCFILES m4_default($3,m4_tolower($1))"
        m4_toupper(myvar)_LFLAGS="$m4_toupper(myvar)_LFLAGS $m4_toupper($1)_LFLAGS"
        m4_toupper(myvar)_CFLAGS="$m4_toupper(myvar)_CFLAGS `echo $m4_toupper($1)_CFLAGS | sed -e s/-D[]m4_toupper($1)_BUILD//`"
 

@@ -57,7 +57,7 @@ AC_DEFUN_ONCE([AC_COIN_PROG_F77],
   AC_REQUIRE([AC_COIN_ENABLE_MSVC])
 
   AC_ARG_ENABLE([f77],
-    [AC_HELP_STRING([--disable-f77],[disable checking for F77 compiler])],
+    [AS_HELP_STRING([--disable-f77],[disable checking for F77 compiler])],
     [enable_f77=$enableval],
     [enable_f77=yes])
 
@@ -159,12 +159,6 @@ dnl F77_LIBRARY_LDFLAGS, etc.)
   AC_PROG_F77_C_O
   if test $ac_cv_prog_f77_c_o = no ; then
     F77="$am_aux_dir/compile $F77"
-  else
-    case "$F77" in *ifort )
-      case $build in
-        *-mingw* | *-cygwin* | *-msys* ) F77="$am_aux_dir/compile $F77" ;; esac
-      ;;
-    esac
   fi
 ])
 
@@ -281,7 +275,7 @@ AC_DEFUN([AC_COIN_TRY_FLINK],
 [
   case $ac_ext in
     f)
-      AC_TRY_LINK(,[      call $1],[flink_try=yes],[flink_try=no])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[      call $1]])],[flink_try=yes],[flink_try=no])
       ;;
     c)
       coin_need_flibs=no

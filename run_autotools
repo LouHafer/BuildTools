@@ -277,6 +277,7 @@ doRecurse=0
 suppressScripts=0
 userSpecifiedDirs=0
 dryRun=0
+doForeign=0
 
 # Process the parameters. A parameter without an opening `-' is assumed to be
 # a spec for a directory to be processed. We really shouldn't see -h here, but

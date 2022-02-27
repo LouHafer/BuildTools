@@ -817,15 +817,14 @@ AC_DEFUN([AC_COIN_CHK_MOD_EXISTS],
 
 # COIN_CHK_HERE([prim],[client packages],[pcfile])
 
-# Augment the _LFLAGS, _CFLAGS, and _PCFILES variables of the client
-# packages with the values from PRIM_LFLAGS_PUB, PRIM_CFLAGS_PUB, and
-# PRIM_PCFILES_PUB. This macro is intended for the case where a single project
-# builds several objects and one object includes another. For example,
-# the various OsiXxxLib solvers, which depend on OsiLib. We can't consult
-# osi.pc (it's not installed yet) but the relevant variables are ready at
-# hand. The name of prim is often different from the name of the .pc file
-# ($3), hence the separate parameter. If $3 is not given, it defaults to
-# tolower($1).
+# Augment the _LFLAGS, _CFLAGS, and _PCFILES variables of the client packages
+# with the values from PRIM_LFLAGS, PRIM_CFLAGS, and PRIM_PCFILES. This macro
+# is intended for the case where a single project builds several objects and
+# one object includes another. For example, the various OsiXxxLib solvers,
+# which depend on OsiLib. We can't consult osi.pc (it's not installed
+# yet) but the relevant variables are ready at hand. The name of prim is
+# often different from the name of the .pc file ($3), hence the separate
+# parameter. If $3 is not given, it defaults to tolower($1).
 
 # This macro should be called after FINALIZE_FLAGS is invoked for the
 # client packages, for two reasons: First, COIN-OR packages tend to use

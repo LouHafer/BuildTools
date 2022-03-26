@@ -110,7 +110,8 @@ AC_DEFUN([AC_COIN_CHECK_NAMESPACE_DECL],
 ###########################################################################
 # This macro checks for a usable implementation of a function to check if a
 # floating point value is finite or not. If a function is found, the macro
-# defines the preprocessor symbol COIN_C_FINITE to the name of this function.
+# defines the preprocessor symbol PKGNAME_C_FINITE to the name of this
+# function.
 ###########################################################################
 
 AC_DEFUN([AC_COIN_CHECK_ISFINITE],
@@ -135,7 +136,8 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
   if test -z "$COIN_C_FINITE"; then
     AC_MSG_WARN(Cannot find C-function for checking Inf.)
   else
-    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_FINITE,[$COIN_C_FINITE],[Define to be the name of C-function for Inf check])
+    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_FINITE,[$COIN_C_FINITE],
+        [Define to be the name of C-function for Inf check])
   fi
 ])
 
@@ -144,7 +146,7 @@ AC_DEFUN([AC_COIN_CHECK_ISFINITE],
 ###########################################################################
 # This macro checks for a usable implementation of a function to check if
 # a floating point value is not a number (NaN).  If a function is found,
-# the macro defines the preprocessor symbol COIN_C_ISNAN to the name of
+# the macro defines the preprocessor symbol PKGNAME_C_ISNAN to the name of
 # this function.
 ###########################################################################
 
@@ -170,7 +172,8 @@ AC_DEFUN([AC_COIN_CHECK_ISNAN],
   if test -z "$COIN_C_ISNAN"; then
     AC_MSG_WARN(Cannot find C-function for checking NaN.)
   else
-    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_ISNAN,[$COIN_C_ISNAN],[Define to be the name of C-function for NaN check])
+    AC_DEFINE_UNQUOTED(m4_toupper(AC_PACKAGE_NAME)_C_ISNAN,[$COIN_C_ISNAN],
+        [Define to be the name of C-function for NaN check])
   fi
 ])
 
